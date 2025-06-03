@@ -170,13 +170,13 @@ fn load_tracker_data() -> HabitTracker {
         Ok(file_contents) if !file_contents.trim().is_empty() => ron::from_str(&file_contents)
             .unwrap_or_else(|parse_error| {
                 eprintln!(
-                    "⚠️  Could not read saved habit data ({}), starting fresh",
+                    "Could not read saved habit data ({}), starting fresh",
                     parse_error
                 );
                 HabitTracker::default()
             }),
         _ => {
-            println!("📝 No previous habit data found, starting with a clean slate!");
+            println!("No previous habit data found, starting with a clean slate!");
             HabitTracker::default()
         }
     }
@@ -220,31 +220,31 @@ impl FromStr for UserChoice {
 
 fn display_main_menu() {
     println!(
-        "🎯 === Personal Habit Tracker ===
-    1. 📝 Add a new habit to track
-    2. ✅ Update today's habit completions
-    3. 📊 View habit progress summary
-    4. 🗑️  Delete a habit
-    5. 📈 View detailed statistics
-    6. 👋 Exit program"
+        "=== Habit Tracker ===
+    1. Add a new habit
+    2. Mark today's habits
+    3. View habit progress
+    4. Delete a habit
+    5. View detailed habit progress
+    6. Exit"
     );
 }
 
 fn handle_add_habit(habit_tracker: &mut HabitTracker) {
-    println!("\n📝 Adding a new habit to track...");
+    println!("\nAdding a new habit to track...");
 
     let new_habit_input: String = match input!("What new habit would you like to start tracking? ")
     {
         Ok(input) => input,
         Err(_) => {
-            println!("❌ Invalid input. Please try again.");
+            eprintln!("Invalid input. Please try again.");
             return;
         }
     };
 
     match habit_tracker.add_new_habit(new_habit_input.clone()) {
         Ok(()) => {
-            println!("✅ Successfully added habit: '{}'", new_habit_input.trim());
+            println!("Successfully added habit: '{}'", new_habit_input.trim());
 
             if ask_yes_no_question("Would you like to mark this habit as completed for today") {
                 if let Some(today_record) = habit_tracker.get_most_recent_record_mut() {
@@ -259,7 +259,7 @@ fn handle_add_habit(habit_tracker: &mut HabitTracker) {
                     {
                         habit_completion.is_completed = true;
                         println!(
-                            "🎉 Great! Marked '{}' as completed for today!",
+                            "Great! Marked '{}' as completed for today!",
                             new_habit_input.trim()
                         );
                     }
@@ -267,13 +267,13 @@ fn handle_add_habit(habit_tracker: &mut HabitTracker) {
             }
         }
         Err(error_message) => {
-            println!("❌ Could not add habit: {}", error_message);
+            eprintln!("Could not add habit: {}", error_message);
         }
     }
 }
 
 fn handle_update_habits(habit_tracker: &mut HabitTracker) {
-    println!("\n✅ Updating today's habit completions...");
+    println!("Updating today's habit completions...");
 
     if let Some(todays_record) = habit_tracker.get_most_recent_record_mut() {
         let mut habits_updated = false;
@@ -294,7 +294,7 @@ fn handle_update_habits(habit_tracker: &mut HabitTracker) {
                 completed_count += 1;
                 habits_updated = true;
                 println!(
-                    "🎉 Awesome! Marked '{}' as completed!",
+                    "Awesome! Marked '{}' as completed!",
                     habit_completion.habit_name
                 );
             }
@@ -302,26 +302,24 @@ fn handle_update_habits(habit_tracker: &mut HabitTracker) {
 
         if habits_updated {
             println!(
-                "📊 Today's progress: {}/{} habits completed!",
+                "Today's progress: {}/{} habits completed!",
                 completed_count, total_habits
             );
         } else if completed_count == total_habits && total_habits > 0 {
-            println!("🌟 Amazing! All your habits for today are already completed!");
+            println!("Amazing! All your habits for today are already completed!");
         } else {
-            println!("📝 No changes made to today's habits.");
+            println!("No changes made to today's habits.");
         }
     } else {
-        println!("❌ No habit records found. This shouldn't happen!");
+        eprintln!("No habit records found.");
     }
 }
 
 fn handle_view_progress(habit_tracker: &HabitTracker) {
-    println!("\n📊 === Habit Progress Summary ===");
+    println!("\n=== Habit Progress Summary ===");
 
     if habit_tracker.tracked_habits.is_empty() {
-        println!(
-            "📝 You haven't added any habits yet. Add some habits first to see your progress!"
-        );
+        println!("You haven't added any habits yet. Add some habits first to see your progress!");
         return;
     }
 
@@ -330,19 +328,10 @@ fn handle_view_progress(habit_tracker: &HabitTracker) {
             habit_tracker.calculate_habit_statistics(habit_name);
 
         let progress_bar = create_progress_bar(success_rate);
-        let status_emoji = if success_rate >= 80.0 {
-            "🔥"
-        } else if success_rate >= 60.0 {
-            "👍"
-        } else if success_rate >= 40.0 {
-            "📈"
-        } else {
-            "💪"
-        };
 
         println!(
             "{} {:<30} {} {}/{} days ({:.1}%)",
-            status_emoji, habit_name, progress_bar, completed_days, total_days, success_rate
+            progress_bar, habit_name, progress_bar, completed_days, total_days, success_rate
         );
     }
 }
@@ -360,10 +349,10 @@ fn create_progress_bar(percentage: f64) -> String {
 }
 
 fn handle_delete_habit(habit_tracker: &mut HabitTracker) {
-    println!("\n🗑️  Deleting a habit...");
+    println!("\nDeleting a habit...");
 
     if habit_tracker.tracked_habits.is_empty() {
-        println!("📝 No habits found to delete. Add some habits first!");
+        eprintln!("No habits found to delete. Add some habits first!");
         return;
     }
 
@@ -376,7 +365,7 @@ fn handle_delete_habit(habit_tracker: &mut HabitTracker) {
         match input!("\nWhich habit would you like to stop tracking? (enter the exact name): ") {
             Ok(input) => input,
             Err(_) => {
-                println!("❌ Invalid input. Please try again.");
+                eprintln!("Invalid input. Please try again.");
                 return;
             }
         };
@@ -386,48 +375,45 @@ fn handle_delete_habit(habit_tracker: &mut HabitTracker) {
         habit_to_delete.trim()
     )) {
         if habit_tracker.remove_habit(&habit_to_delete) {
-            println!(
-                "✅ Successfully deleted habit: '{}'",
-                habit_to_delete.trim()
-            );
+            println!("Successfully deleted habit: '{}'", habit_to_delete.trim());
         } else {
             println!(
-                "❌ Habit '{}' not found. Make sure you entered the exact name.",
+                "Habit '{}' not found. Make sure you entered the exact name.",
                 habit_to_delete.trim()
             );
         }
     } else {
-        println!("📝 Habit deletion cancelled.");
+        println!("Habit deletion cancelled.");
     }
 }
 
 fn handle_detailed_stats(habit_tracker: &HabitTracker) {
-    println!("\n📈 === Detailed Habit Statistics ===");
+    println!("\n=== Detailed Habit Statistics ===");
 
     if habit_tracker.tracked_habits.is_empty() {
-        println!("📝 No habits to analyze yet. Add some habits first!");
+        println!("No habits to analyze yet. Add some habits first!");
         return;
     }
 
     let total_tracking_days = habit_tracker.daily_habit_records.len();
-    println!("📅 Total days tracked: {}", total_tracking_days);
+    println!("Total days tracked: {}", total_tracking_days);
 
     if let Some(earliest_date) = habit_tracker.daily_habit_records.first() {
-        println!("🗓️  Tracking since: {}", earliest_date.record_date);
+        println!("Tracking since: {}", earliest_date.record_date);
     }
 
-    println!("\n🎯 Individual Habit Analysis:");
+    println!("\nIndividual Habit Analysis:");
     for habit_name in &habit_tracker.tracked_habits {
         let (completed, total, percentage) = habit_tracker.calculate_habit_statistics(habit_name);
 
-        println!("\n📊 {}", habit_name);
-        println!("   Completed: {} days", completed);
-        println!("   Total tracked: {} days", total);
-        println!("   Success rate: {:.1}%", percentage);
+        println!("\n{}", habit_name);
+        println!("Completed: {} days", completed);
+        println!("Total tracked: {} days", total);
+        println!("Success rate: {:.1}%", percentage);
 
         let streak = calculate_current_streak(habit_tracker, habit_name);
         if streak > 0 {
-            println!("   Current streak: {} days 🔥", streak);
+            println!("Current streak: {} days", streak);
         }
     }
 }
@@ -487,7 +473,7 @@ fn main() {
             prompt_for_initial_habits(&mut habit_tracker);
         }
         if let Err(e) = save_tracker_data(&habit_tracker) {
-            eprintln!("⚠️  Warning: {}", e);
+            eprintln!("Warning: {}", e);
         }
     }
 
@@ -497,7 +483,7 @@ fn main() {
         let user_menu_choice: UserChoice = match input!("\nWhat would you like to do? (1-6): ") {
             Ok(choice) => choice,
             Err(_) => {
-                println!("❌ Please enter a valid number between 1 and 6");
+                eprintln!("Invalid choice!");
                 continue;
             }
         };
@@ -509,15 +495,12 @@ fn main() {
             UserChoice::DeleteHabit => handle_delete_habit(&mut habit_tracker),
             UserChoice::ViewDetailedStats => handle_detailed_stats(&habit_tracker),
             UserChoice::ExitProgram => {
-                println!(
-                    "👋 Thanks for using the Habit Tracker! Keep building those positive habits! 🌟"
-                );
                 break;
             }
         }
 
         if let Err(e) = save_tracker_data(&habit_tracker) {
-            eprintln!("⚠️  Warning: {}", e);
+            eprintln!("Warning: {}", e);
         }
     }
 }
